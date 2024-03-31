@@ -1,0 +1,65 @@
+# https://git-scm.com/docs/gitattributes
+* -text
+
+# git
+.gitattributes  text eol=lf working-tree-encoding=UTF-8
+.gitignore      text eol=lf working-tree-encoding=UTF-8
+
+# visual studio
+*.props     text eol=lf working-tree-encoding=UTF-8
+*.targets   text eol=lf working-tree-encoding=UTF-8
+*.csproj    text eol=lf working-tree-encoding=UTF-8
+
+# go
+*.go    text eol=lf diff=go working-tree-encoding=UTF-8
+
+# c/c++
+*.h     text eol=lf diff=cpp working-tree-encoding=UTF-8
+*.hpp   text eol=lf diff=cpp working-tree-encoding=UTF-8
+*.c     text eol=lf diff=cpp working-tree-encoding=UTF-8
+*.cc    text eol=lf diff=cpp working-tree-encoding=UTF-8
+*.cxx   text eol=lf diff=cpp working-tree-encoding=UTF-8
+*.cpp   text eol=lf diff=cpp working-tree-encoding=UTF-8
+*.inl   text eol=lf diff=cpp working-tree-encoding=UTF-8
+
+# csharp
+*.cs    text eol=lf diff=csharp working-tree-encoding=UTF-8
+
+# lua
+*.lua   text eol=lf working-tree-encoding=UTF-8
+
+# python
+*.py    text eol=lf diff=python working-tree-encoding=UTF-8
+
+# markdown
+*.md    text eol=lf diff=markdown working-tree-encoding=UTF-8
+
+# shell
+*.sh    text eol=lf diff=bash working-tree-encoding=UTF-8
+*.bash  text eol=lf diff=bash working-tree-encoding=UTF-8
+*.psl   text eol=crlf working-tree-encoding=UTF-8
+*.bat   text eol=crlf working-tree-encoding=GB18030
+*.cmd   text eol=crlf working-tree-encoding=GB18030
+
+# sql
+*.sql   text eol=lf working-tree-encoding=UTF-8
+
+# protobuf
+*.proto text eol=lf working-tree-encoding=UTF-8
+
+# cmake
+*.cmake         text eol=lf working-tree-encoding=UTF-8
+CMakeLists.txt  text eol=lf working-tree-encoding=UTF-8
+
+# yaml
+*.yaml  text eol=lf working-tree-encoding=UTF-8
+*.yml   text eol=lf working-tree-encoding=UTF-8
+
+# toml
+*.toml  text eol=lf working-tree-encoding=UTF-8
+
+# docker
+Dockerfile  text eol=lf working-tree-encoding=UTF-8
+
+# other
+LICENSE     text eol=lf working-tree-encoding=UTF-8
