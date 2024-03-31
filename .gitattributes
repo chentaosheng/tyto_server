@@ -1,4 +1,6 @@
 # https://git-scm.com/docs/gitattributes
+
+# default use binary mode
 * -text
 
 # git
@@ -6,12 +8,32 @@
 .gitignore      text eol=lf working-tree-encoding=UTF-8
 
 # visual studio
-*.props     text eol=lf working-tree-encoding=UTF-8
-*.targets   text eol=lf working-tree-encoding=UTF-8
-*.csproj    text eol=lf working-tree-encoding=UTF-8
+*.props     text eol=crlf working-tree-encoding=UTF-8-BOM
+*.targets   text eol=crlf working-tree-encoding=UTF-8-BOM
+*.csproj    text eol=crlf working-tree-encoding=UTF-8-BOM
 
-# go
-*.go    text eol=lf diff=go working-tree-encoding=UTF-8
+# batch
+*.bat   text eol=crlf working-tree-encoding=GB18030
+*.cmd   text eol=crlf working-tree-encoding=GB18030
+
+# shell, toml
+*.sh    text eol=lf diff=bash working-tree-encoding=UTF-8
+*.bash  text eol=lf diff=bash working-tree-encoding=UTF-8
+*.psl   text eol=lf diff=bash working-tree-encoding=UTF-8
+*.toml  text eol=lf working-tree-encoding=UTF-8
+
+# cmake
+*.cmake         text eol=lf working-tree-encoding=UTF-8
+CMakeLists.txt  text eol=lf working-tree-encoding=UTF-8
+
+# docker
+Dockerfile  text eol=lf working-tree-encoding=UTF-8
+
+# markdown，yaml，sql
+*.md    text eol=lf diff=markdown working-tree-encoding=UTF-8
+*.yaml  text eol=lf working-tree-encoding=UTF-8
+*.yml   text eol=lf working-tree-encoding=UTF-8
+*.sql   text eol=lf working-tree-encoding=UTF-8
 
 # c/c++
 *.h     text eol=lf diff=cpp working-tree-encoding=UTF-8
@@ -21,45 +43,15 @@
 *.cxx   text eol=lf diff=cpp working-tree-encoding=UTF-8
 *.cpp   text eol=lf diff=cpp working-tree-encoding=UTF-8
 *.inl   text eol=lf diff=cpp working-tree-encoding=UTF-8
-
-# csharp
-*.cs    text eol=lf diff=csharp working-tree-encoding=UTF-8
-
-# lua
 *.lua   text eol=lf working-tree-encoding=UTF-8
-
-# python
 *.py    text eol=lf diff=python working-tree-encoding=UTF-8
-
-# markdown
-*.md    text eol=lf diff=markdown working-tree-encoding=UTF-8
-
-# shell
-*.sh    text eol=lf diff=bash working-tree-encoding=UTF-8
-*.bash  text eol=lf diff=bash working-tree-encoding=UTF-8
-*.psl   text eol=crlf working-tree-encoding=UTF-8
-*.bat   text eol=crlf working-tree-encoding=GB18030
-*.cmd   text eol=crlf working-tree-encoding=GB18030
-
-# sql
-*.sql   text eol=lf working-tree-encoding=UTF-8
-
-# protobuf
+*.go    text eol=lf diff=go working-tree-encoding=UTF-8
+*.java  text eol=lf diff=java working-tree-encoding=UTF-8
+*.cs    text eol=lf diff=csharp working-tree-encoding=UTF-8
 *.proto text eol=lf working-tree-encoding=UTF-8
 
-# cmake
-*.cmake         text eol=lf working-tree-encoding=UTF-8
-CMakeLists.txt  text eol=lf working-tree-encoding=UTF-8
-
-# yaml
-*.yaml  text eol=lf working-tree-encoding=UTF-8
-*.yml   text eol=lf working-tree-encoding=UTF-8
-
-# toml
-*.toml  text eol=lf working-tree-encoding=UTF-8
-
-# docker
-Dockerfile  text eol=lf working-tree-encoding=UTF-8
+# txt
+*.txt   text working-tree-encoding=UTF-8
 
 # other
-LICENSE     text eol=lf working-tree-encoding=UTF-8
+LICENSE text eol=lf working-tree-encoding=UTF-8
