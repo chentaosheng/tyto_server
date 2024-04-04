@@ -59,8 +59,7 @@ namespace tyto
 				{
 					// 获取失败，说明线程间竞争比较激烈，进行随机退避
 					std::size_t shift = (std::min)(conflict_count, kMAX_BACKOFF_SHIFT);
-					std::uniform_int_distribution<std::size_t> dist
-					{
+					std::uniform_int_distribution<std::size_t> dist{
 						0,
 						static_cast<std::size_t>(1) << shift
 					};
@@ -68,7 +67,8 @@ namespace tyto
 					const std::size_t relax_count = dist(generator);
 					++conflict_count;
 
-					for (std::size_t i = 0; i < relax_count; ++i) {
+					for (std::size_t i = 0; i < relax_count; ++i)
+					{
 						CpuRelax();
 					}
 
