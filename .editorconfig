@@ -3,7 +3,7 @@
 root = true
 
 # visual studio
-[*.{props,targets,csproj}]
+[*.{sln,props,targets,csproj,vcxproj,filters}]
 indent_style = space
 indent_size = 2
 end_of_line = crlf

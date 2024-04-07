@@ -8,13 +8,16 @@
 .gitignore      text eol=lf working-tree-encoding=UTF-8
 
 # visual studio
-*.props     text eol=crlf working-tree-encoding=UTF-8-BOM
-*.targets   text eol=crlf working-tree-encoding=UTF-8-BOM
-*.csproj    text eol=crlf working-tree-encoding=UTF-8-BOM
+*.sln       -text eol=crlf
+*.props     -text eol=crlf
+*.targets   -text eol=crlf
+*.csproj    -text eol=crlf
+*.vcxproj   -text eol=crlf
+*.filters   -text eol=crlf
 
 # batch
-*.bat   text eol=crlf working-tree-encoding=GB18030
-*.cmd   text eol=crlf working-tree-encoding=GB18030
+*.bat   -text eol=crlf
+*.cmd   -text eol=crlf
 
 # shell, toml
 *.sh    text eol=lf diff=bash working-tree-encoding=UTF-8
