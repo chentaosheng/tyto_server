@@ -2,3 +2,8 @@
 /tyto/cpp/.idea
 /tyto/cpp/build
 /tyto/go/.idea
+/tyto/csharp/.vs
+/tyto/csharp/.idea
+/tyto/csharp/bin
+/tyto/csharp/build
+/tyto/csharp/tyto.sln.DotSettings.user
