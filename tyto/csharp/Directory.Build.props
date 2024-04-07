@@ -38,4 +38,13 @@
     <!-- 项目最终输出 -->
     <OutputPath>$(SourceRoot)bin\$(Configuration)</OutputPath>
   </PropertyGroup>
+
+  <!-- 代码分析配置 -->
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)style/stylecop.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)style/stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+
 </Project>
