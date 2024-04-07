@@ -1,0 +1,21 @@
+﻿<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="BenchmarkDotNet" Version="0.13.12" />
+    <PackageVersion Include="Google.Protobuf" Version="3.26.1" />
+    <PackageVersion Include="MongoDB.Bson" Version="2.24.0" />
+    <PackageVersion Include="MongoDB.Driver" Version="2.24.0" />
+    <PackageVersion Include="MongoDB.Driver.Core" Version="2.24.0" />
+    <PackageVersion Include="NLog" Version="5.2.8" />
+    <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageVersion>
+    <PackageVersion Include="System.IO.Hashing" Version="8.0.0" />
+    <PackageVersion Include="System.Text.Json" Version="8.0.3" />
+    <PackageVersion Include="xunit" Version="2.7.0" />
+    <PackageVersion Include="YamlDotNet" Version="15.1.2" />
+  </ItemGroup>
+</Project>

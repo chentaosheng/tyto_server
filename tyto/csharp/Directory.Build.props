@@ -1,0 +1,41 @@
+﻿<Project>
+  <!-- 项目信息 -->
+  <PropertyGroup>
+    <Authors>tyto alba game engine project</Authors>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <!-- dotnet sdk配置 -->
+  <PropertyGroup>
+    <!-- dotnet versoin -->
+    <TargetFramework>net8.0</TargetFramework>
+    <!--
+      C#语言版本:
+      unity 2021.3+对应9.0
+      unity 2020.3对应8.0
+      .net 8.x对应12.0
+      .net 6.x对应10.0
+      .net standard 2.1对应8.0
+      .net standard 2.0对应7.3
+      .net framework 4.x对应7.3
+    -->
+    <LangVersion>12.0</LangVersion>
+    <!-- 编译器选项 -->
+    <Features>strict</Features>
+    <Nullable>enable</Nullable>
+    <WarningLevel>3</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- 代码的根目录 -->
+    <SourceRoot>$(MSBuildThisFileDirectory)</SourceRoot>
+    <!-- 编译中间文件输出目录 -->
+    <BaseIntermediateOutputPath>$(SourceRoot)build\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <!-- nuget等文件输出目录 -->
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+    <!-- 项目最终输出 -->
+    <OutputPath>$(SourceRoot)bin\$(Configuration)</OutputPath>
+  </PropertyGroup>
+</Project>
