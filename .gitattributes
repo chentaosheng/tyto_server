@@ -24,6 +24,7 @@
 *.bash  text eol=lf diff=bash working-tree-encoding=UTF-8
 *.psl   text eol=lf diff=bash working-tree-encoding=UTF-8
 *.toml  text eol=lf working-tree-encoding=UTF-8
+*.json  text eol=lf working-tree-encoding=UTF-8
 
 # cmake
 *.cmake         text eol=lf working-tree-encoding=UTF-8
@@ -37,6 +38,7 @@ Dockerfile  text eol=lf working-tree-encoding=UTF-8
 *.yaml  text eol=lf working-tree-encoding=UTF-8
 *.yml   text eol=lf working-tree-encoding=UTF-8
 *.sql   text eol=lf working-tree-encoding=UTF-8
+*.xml   text eol=lf working-tree-encoding=UTF-8
 
 # c/c++
 *.h     text eol=lf diff=cpp working-tree-encoding=UTF-8

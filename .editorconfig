@@ -18,8 +18,8 @@ end_of_line = crlf
 charset = latin1
 trim_trailing_whitespace = true
 
-# shell、toml
-[*.{sh,bash,psl,toml}]
+# shell、toml、json
+[*.{sh,bash,psl,toml,json}]
 indent_style = space
 indent_size = 4
 end_of_line = lf
@@ -42,8 +42,8 @@ end_of_line = lf
 charset = utf-8
 trim_trailing_whitespace = true
 
-# md，yaml，sql
-[*.{md,yaml,yml,sql}]
+# md，yaml，sql, xml
+[*.{md,yaml,yml,sql,xml}]
 indent_style = space
 indent_size = 2
 end_of_line = lf
