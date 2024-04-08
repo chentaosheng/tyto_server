@@ -63,7 +63,7 @@
     <Rule Id="SA1124" Action="Error" />          <!-- Do not use regions -->
     <Rule Id="SA1125" Action="Error" />          <!-- Use shorthand for nullable types -->
     <Rule Id="SA1126" Action="Error" />          <!-- Prefix calls correctly -->
-    <Rule Id="SA1127" Action="Error" />          <!-- Generic type constraints should be on their own line -->
+    <Rule Id="SA1127" Action="None" />           <!-- Generic type constraints should be on their own line -->
     <Rule Id="SA1128" Action="Error" />          <!-- Put constructor initializers on their own line -->
     <Rule Id="SA1129" Action="Error" />          <!-- Do not use default value type constructor -->
     <Rule Id="SA1130" Action="Error" />          <!-- Use lambda syntax -->
@@ -80,7 +80,7 @@
 
   <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers.OrderingRules">
     <Rule Id="SA1200" Action="Error" />          <!-- Using directives should be placed correctly -->
-    <Rule Id="SA1201" Action="Error" />          <!-- Elements should appear in the correct order -->
+    <Rule Id="SA1201" Action="None" />           <!-- Elements should appear in the correct order -->
     <Rule Id="SA1202" Action="Error" />          <!-- Elements should be ordered by access -->
     <Rule Id="SA1203" Action="Error" />          <!-- Constants should appear before fields -->
     <Rule Id="SA1204" Action="Error" />          <!-- Static elements should appear before instance elements -->
@@ -103,14 +103,14 @@
     <Rule Id="SA1301" Action="Error" />          <!-- Element should begin with lower-case letter -->
     <Rule Id="SA1302" Action="Error" />          <!-- Interface names should begin with I -->
     <Rule Id="SA1303" Action="Error" />          <!-- Const field names should begin with upper-case letter -->
-    <Rule Id="SA1304" Action="Error" />          <!-- Non-private readonly fields should begin with upper-case letter -->
+    <Rule Id="SA1304" Action="None" />           <!-- Non-private readonly fields should begin with upper-case letter -->
     <Rule Id="SA1305" Action="Error" />          <!-- Field names should not use Hungarian notation -->
     <Rule Id="SA1306" Action="Error" />          <!-- Field names should begin with lower-case letter -->
-    <Rule Id="SA1307" Action="Error" />          <!-- Accessible fields should begin with upper-case letter -->
-    <Rule Id="SA1308" Action="Error" />          <!-- Variable names should not be prefixed -->
+    <Rule Id="SA1307" Action="None" />           <!-- Accessible fields should begin with upper-case letter -->
+    <Rule Id="SA1308" Action="None" />           <!-- Variable names should not be prefixed -->
     <Rule Id="SA1309" Action="Error" />          <!-- Field names should not begin with underscore -->
     <Rule Id="SA1310" Action="Error" />          <!-- Field names should not contain underscore -->
-    <Rule Id="SA1311" Action="Error" />          <!-- Static readonly fields should begin with upper-case letter -->
+    <Rule Id="SA1311" Action="None" />           <!-- Static readonly fields should begin with upper-case letter -->
     <Rule Id="SA1312" Action="Error" />          <!-- Variable names should begin with lower-case letter -->
     <Rule Id="SA1313" Action="Error" />          <!-- Parameter names should begin with lower-case letter -->
     <Rule Id="SA1314" Action="Error" />          <!-- Type parameter names should begin with T -->
@@ -122,7 +122,7 @@
     <Rule Id="SA1119" Action="Error" />          <!-- Statement should not use unnecessary parenthesis -->
     <Rule Id="SA1400" Action="Error" />          <!-- Access modifier should be declared -->
     <Rule Id="SA1401" Action="Error" />          <!-- Fields should be private -->
-    <Rule Id="SA1402" Action="Error" />          <!-- File may only contain a single type -->
+    <Rule Id="SA1402" Action="None" />           <!-- File may only contain a single type -->
     <Rule Id="SA1403" Action="Error" />          <!-- File may only contain a single namespace -->
     <Rule Id="SA1404" Action="Error" />          <!-- Code analysis suppression should have justification -->
     <Rule Id="SA1405" Action="Error" />          <!-- Debug.Assert should provide message text -->
@@ -161,7 +161,7 @@
   </Rules>
 
   <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers.DocumentationRules">
-    <Rule Id="SA1600" Action="Error" />          <!-- Elements should be documented -->
+    <Rule Id="SA1600" Action="None" />           <!-- Elements should be documented -->
     <Rule Id="SA1601" Action="Error" />          <!-- Partial elements should be documented -->
     <Rule Id="SA1602" Action="Error" />          <!-- Enumeration items should be documented -->
     <Rule Id="SA1603" Action="Error" />          <!-- Documentation should contain valid XML -->
@@ -179,7 +179,7 @@
     <Rule Id="SA1615" Action="None" />           <!-- Element return value should be documented -->
     <Rule Id="SA1616" Action="Error" />          <!-- Element return value documentation should have text -->
     <Rule Id="SA1617" Action="Error" />          <!-- Void return value should not be documented -->
-    <Rule Id="SA1618" Action="Error" />          <!-- Generic type parameters should be documented -->
+    <Rule Id="SA1618" Action="None" />           <!-- Generic type parameters should be documented -->
     <Rule Id="SA1619" Action="Error" />          <!-- Generic type parameters should be documented partial class -->
     <Rule Id="SA1620" Action="Error" />          <!-- Generic type parameter documentation should match type parameters -->
     <Rule Id="SA1621" Action="Error" />          <!-- Generic type parameter documentation should declare parameter name -->

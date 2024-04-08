@@ -18,7 +18,11 @@
         },
         "namingRules": {
             "includeInferredTupleElementNames": true,
-            "tupleElementNameCasing" : "camelCase"
+            "tupleElementNameCasing": "camelCase",
+            "allowedHungarianPrefixes": [
+                "s_",
+                "t_"
+            ]
         },
         "documentationRules": {
             "documentInterfaces": true
