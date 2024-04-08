@@ -11,7 +11,7 @@ type WaitQueue[T any] struct {
 	buff memutil.RingBuffer[T]
 }
 
-func NewWaitQueue[T any](initCapacity int) *WaitQueue[T] {
+func NewWaitQueue[T any](initCapacity int32) *WaitQueue[T] {
 	return &WaitQueue[T]{
 		cond: sync.NewCond(&SpinLock{}),
 		buff: *memutil.NewRingBuffer[T](initCapacity),
@@ -42,7 +42,7 @@ func (q *WaitQueue[T]) Push(v T) {
 }
 
 // 返回队列长度
-func (q *WaitQueue[T]) Len() int {
+func (q *WaitQueue[T]) Len() int32 {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
 	return q.buff.Len()
