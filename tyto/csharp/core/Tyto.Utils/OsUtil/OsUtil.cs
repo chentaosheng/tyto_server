@@ -5,27 +5,27 @@ using System;
 public static class OsUtil
 {
 	/// <summary>
-	/// 获取操作系统的位数
+	/// 获取软件的位数
 	/// </summary>
-	public static int GetOsBit()
+	public static int GetBit()
 	{
 		return IntPtr.Size * 8;
 	}
 
 	/// <summary>
-	/// 是否为64位操作系统
+	/// 是否为64位软件
 	/// </summary>
 	public static bool Is64Bit()
 	{
-		return GetOsBit() == 64;
+		return GetBit() == 64;
 	}
 
 	/// <summary>
-	/// 是否为32位操作系统
+	/// 是否为32位软件
 	/// </summary>
 	public static bool Is32Bit()
 	{
-		return GetOsBit() == 32;
+		return GetBit() == 32;
 	}
 
 	/// <summary>
