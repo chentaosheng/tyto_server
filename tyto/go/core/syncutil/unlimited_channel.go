@@ -2,7 +2,7 @@ package syncutil
 
 import "tyto/core/memutil"
 
-// 无限容量的channel
+// 无限容量的channel，使用方便，但性能略差
 type UnlimitedChannel[T any] struct {
 	in     chan T
 	out    chan T
@@ -13,7 +13,7 @@ type UnlimitedChannel[T any] struct {
 // initCapacity: 初始容量
 func NewUnlimitedChannel[T any](initCapacity int32) *UnlimitedChannel[T] {
 	// 只是为了避免channel阻塞
-	chanSize := 64
+	chanSize := 128
 
 	ch := &UnlimitedChannel[T]{
 		in:     make(chan T, chanSize),
