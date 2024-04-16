@@ -5,7 +5,7 @@ import (
 	"tyto/core/memutil"
 )
 
-// 双缓冲队列
+// 双缓冲队列，适合多生产者单消费者场景
 type DoubleQueue[T any] struct {
 	cond       *sync.Cond
 	writeQueue *memutil.RingBuffer[T]

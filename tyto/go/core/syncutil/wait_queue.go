@@ -6,6 +6,7 @@ import (
 )
 
 // 等待队列，会阻塞等待Pop操作
+// 适合多生产者多消费者场景
 type WaitQueue[T any] struct {
 	cond  *sync.Cond
 	queue memutil.RingBuffer[T]
