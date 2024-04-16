@@ -5,7 +5,7 @@ import (
 	"tyto/core/memutil"
 )
 
-// 双缓冲队列，适合多生产者单消费者场景
+// 双缓冲队列，适合多生产者单消费者场景，不要使用多个线程去调用Pop()
 type DoubleQueue[T any] struct {
 	cond       *sync.Cond
 	writeQueue *memutil.RingBuffer[T]
@@ -21,6 +21,7 @@ func NewDoubleQueue[T any](initCapacity int32) *DoubleQueue[T] {
 }
 
 // 弹出队列头部元素
+// 不要使用多个线程去调用Pop()
 func (q *DoubleQueue[T]) Pop() T {
 	if q.readQueue.Empty() {
 		q.cond.L.Lock()
@@ -51,4 +52,16 @@ func (q *DoubleQueue[T]) PushAll(vs []T) {
 	q.writeQueue.PushAll(vs)
 	q.cond.Signal()
 	q.cond.L.Unlock()
+}
+
+// 队列长度
+func (q *DoubleQueue[T]) Len() int32 {
+	q.cond.L.Lock()
+	defer q.cond.L.Unlock()
+
+	return q.writeQueue.Len() + q.readQueue.Len()
+}
+
+func (q *DoubleQueue[T]) Empty() bool {
+	return q.Len() == 0
 }
