@@ -58,7 +58,7 @@ func (rb *RingBuffer[T]) PushAll(vs []T) {
 	rb.size += int32(len(vs))
 }
 
-// 从缓冲区头部读取元素
+// 从缓冲区头部读取元素，读取后删除
 func (rb *RingBuffer[T]) Pop() (T, bool) {
 	if rb.size == 0 {
 		var zero T
@@ -71,7 +71,7 @@ func (rb *RingBuffer[T]) Pop() (T, bool) {
 	return v, true
 }
 
-// 从缓充区读取最多len(vs)个元素
+// 从缓充区读取最多len(vs)个元素，读取后删除
 func (rb *RingBuffer[T]) PopSome(vs []T) int32 {
 	count := int32(len(vs))
 	if count <= 0 {
@@ -101,6 +101,16 @@ func (rb *RingBuffer[T]) PopSome(vs []T) int32 {
 
 	rb.size -= count
 	return count
+}
+
+// 返回缓冲区头部元素，但不删除
+func (rb *RingBuffer[T]) Front() (T, bool) {
+	if rb.size == 0 {
+		var zero T
+		return zero, false
+	}
+
+	return rb.buff[rb.head], true
 }
 
 // 当前元素个数
