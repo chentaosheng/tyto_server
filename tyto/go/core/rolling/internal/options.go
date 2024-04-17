@@ -12,9 +12,9 @@ const (
 	DEFAULT_MAX_AGE           = 30 * 24 * time.Hour // 默认文件保留时间
 	DEFAULT_CLEANUP_INTERVAL  = 24 * time.Hour      // 默认文件清理间隔
 	DEFAULT_ROTATION_INTERVAL = 24 * time.Hour      // 默认文件轮转间隔
-	DEFAULT_FLUSH_INTERVAL    = 5 * time.Second     // 默认缓冲区刷到文件的时间间隔
 	DEFAULT_WRITER_QUEUE_SIZE = 1024                // 默认写入队列大小
 	DEFAULT_BUFFER_SIZE       = 64 * 1024           // 默认缓冲区大小
+	DEFAULT_FLUSH_INTERVAL    = 5 * time.Second     // 默认缓冲区刷到文件的时间间隔
 )
 
 // 旋转文件选项
