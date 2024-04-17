@@ -50,6 +50,14 @@ func (logger *Logger) Fatal(v ...interface{}) {
 	logger.log("FATAL", v...)
 }
 
+func (logger *Logger) NoCallerError(v ...interface{}) {
+	logger.log("ERROR", v...)
+}
+
+func (logger *Logger) NoCallerFatal(v ...interface{}) {
+	logger.log("FATAL", v...)
+}
+
 func (logger *Logger) Close() {
 }
 
