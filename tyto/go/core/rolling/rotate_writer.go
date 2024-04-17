@@ -23,7 +23,7 @@ type RotateWriter struct {
 	fileName        string
 	globPattern     string
 	writer          internal.Writer
-	queue           *syncutil.DoubleQueue[interface{}]
+	queue           *syncutil.DoubleQueue[internal.Event]
 	nextRotateTime  time.Time
 	nextCleanupTime time.Time
 	syncTicker      *time.Ticker
@@ -64,7 +64,7 @@ func NewRotateWriter(opts ...Option) (*RotateWriter, error) {
 	nextRotateTime = internal.GetBaseTime(now, o.RotationInterval)
 	nextCleanupTime = internal.GetBaseTime(now, o.CleanupInterval)
 
-	queue := syncutil.NewDoubleQueue[interface{}](o.WriterQueueSize)
+	queue := syncutil.NewDoubleQueue[internal.Event](o.WriterQueueSize)
 
 	writer := &RotateWriter{
 		options:         *o,
@@ -88,8 +88,8 @@ func NewRotateWriter(opts ...Option) (*RotateWriter, error) {
 	return writer, nil
 }
 
-func (w *RotateWriter) destroyData(rc *BufferType) {
-	w.pool.Load().Put(rc)
+func (w *RotateWriter) destroyData(buff *BufferType) {
+	w.pool.Load().Put(buff)
 }
 
 func (w *RotateWriter) newPool() *sync.Pool {
@@ -114,12 +114,12 @@ func (w *RotateWriter) Write(p []byte) (n int, err error) {
 		w.pool.Store(pool)
 	}
 
-	rc := w.pool.Load().Get().(*BufferType)
-	rc.IncRef()
-	rc.Object().Reset()
-	rc.Object().Write(p)
+	buff := w.pool.Load().Get().(*BufferType)
+	buff.IncRef()
+	buff.Object().Reset()
+	buff.Object().Write(p)
 
-	return w.writeBuffer(rc)
+	return w.writeBuffer(buff)
 }
 
 // 写入数据，内部会对s进行复制
@@ -134,34 +134,39 @@ func (w *RotateWriter) WriteString(s string) (n int, err error) {
 		w.pool.Store(pool)
 	}
 
-	rc := w.pool.Load().Get().(*BufferType)
-	rc.IncRef()
-	rc.Object().Reset()
-	rc.Object().WriteString(s)
+	buff := w.pool.Load().Get().(*BufferType)
+	buff.IncRef()
+	buff.Object().Reset()
+	buff.Object().WriteString(s)
 
-	return w.writeBuffer(rc)
+	return w.writeBuffer(buff)
 }
 
-func (w *RotateWriter) writeBuffer(rc *BufferType) (n int, err error) {
-	w.queue.Push(rc)
+func (w *RotateWriter) writeBuffer(buff *BufferType) (n int, err error) {
+	event := internal.Event{
+		Type:   internal.EVENT_TYPE_BUFFER,
+		Buffer: buff,
+	}
+
+	w.queue.Push(event)
 
 	v := w.lastError.Load()
 	if v != nil {
 		err = v.(error)
-		return rc.Object().Len(), err
+		return buff.Object().Len(), err
 	}
 
-	return rc.Object().Len(), nil
+	return buff.Object().Len(), nil
 }
 
-func (w *RotateWriter) WriteBuffer(rc *BufferType) (n int, err error) {
+func (w *RotateWriter) WriteBuffer(buff *BufferType) (n int, err error) {
 	if w.closed.Load() {
 		return 0, os.ErrClosed
 	}
 
-	rc.IncRef()
+	buff.IncRef()
 
-	return w.writeBuffer(rc)
+	return w.writeBuffer(buff)
 }
 
 func (w *RotateWriter) sync() error {
@@ -194,9 +199,9 @@ func (w *RotateWriter) Sync() error {
 	}
 
 	c := make(chan error)
-	event := &internal.Event{
+	event := internal.Event{
 		Type: internal.EVENT_TYPE_SYNC,
-		C:    c,
+		Chan: c,
 	}
 
 	w.queue.Push(event)
@@ -231,9 +236,9 @@ func (w *RotateWriter) Close() error {
 	}
 
 	c := make(chan error)
-	event := &internal.Event{
+	event := internal.Event{
 		Type: internal.EVENT_TYPE_CLOSE,
-		C:    c,
+		Chan: c,
 	}
 
 	w.queue.Push(event)
@@ -245,7 +250,7 @@ func (w *RotateWriter) Close() error {
 	return err
 }
 
-func (w *RotateWriter) handleBuffer(rc *BufferType) error {
+func (w *RotateWriter) handleBuffer(buff *BufferType) error {
 	var err error
 
 	if err = w.rotate(); err != nil {
@@ -253,7 +258,8 @@ func (w *RotateWriter) handleBuffer(rc *BufferType) error {
 		return err
 	}
 
-	_, err = w.writer.Write(rc.Object().Bytes())
+	_, err = w.writer.Write(buff.Object().Bytes())
+
 	return err
 }
 
@@ -275,9 +281,10 @@ func (w *RotateWriter) handleSyncTicker() {
 				continue
 			}
 
-			event := &internal.Event{
+			// 不需要chan获取结果
+			event := internal.Event{
 				Type: internal.EVENT_TYPE_SYNC,
-				C:    nil,
+				Chan: nil,
 			}
 
 			w.queue.Push(event)
@@ -292,37 +299,35 @@ func (w *RotateWriter) handle() {
 	defer w.stopTicker()
 
 	for {
-		v := w.queue.Pop()
-		switch e := v.(type) {
-		case *BufferType:
-			err := w.handleBuffer(e)
+		e := w.queue.Pop()
+
+		switch e.Type {
+		case internal.EVENT_TYPE_SYNC:
+			err := w.sync()
+			if e.Chan != nil {
+				e.Chan <- err
+
+			} else if err != nil {
+				w.lastError.Store(err)
+				w.Logger().Error("sync failed:", err.Error())
+			}
+
+		case internal.EVENT_TYPE_CLOSE:
+			err := w.close()
+			e.Chan <- err
+
+			// 退出
+			return
+
+		case internal.EVENT_TYPE_BUFFER:
+			err := w.handleBuffer(e.Buffer)
 			if err != nil {
 				w.lastError.Store(err)
 				w.Logger().Error("write failed:", err.Error())
 			}
 
 			// 清理
-			e.DecRef()
-
-		case *internal.Event:
-			switch e.Type {
-			case internal.EVENT_TYPE_SYNC:
-				err := w.sync()
-				if e.C != nil {
-					e.C <- err
-
-				} else if err != nil {
-					w.lastError.Store(err)
-					w.Logger().Error("sync failed:", err.Error())
-				}
-
-			case internal.EVENT_TYPE_CLOSE:
-				err := w.close()
-				e.C <- err
-
-				// 退出
-				return
-			}
+			e.Buffer.DecRef()
 		}
 	}
 }
