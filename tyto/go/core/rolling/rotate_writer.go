@@ -15,7 +15,7 @@ import (
 	"tyto/core/syncutil"
 )
 
-type BufferType = memutil.RefCounter[bytes.Buffer]
+type BufferType = memutil.RefObject[bytes.Buffer]
 
 // 旋转文件writer
 type RotateWriter struct {
@@ -83,7 +83,7 @@ func NewRotateWriter(opts ...Option) (*RotateWriter, error) {
 	}
 
 	// 启动异步处理协程
-	go writer.handle()
+	go writer.run()
 
 	return writer, nil
 }
@@ -97,9 +97,18 @@ func (w *RotateWriter) newPool() *sync.Pool {
 		New: func() interface{} {
 			buff := bytes.Buffer{}
 			buff.Grow(128)
-			return memutil.NewRefCounter(buff, w.destroyData)
+			return memutil.NewRefObject(buff, w.destroyData)
 		},
 	}
+}
+
+func (w *RotateWriter) tryInitPool() {
+	if w.pool.Load() != nil {
+		return
+	}
+
+	pool := w.newPool()
+	w.pool.CompareAndSwap(nil, pool)
 }
 
 // 写入数据，内部会对p进行复制
@@ -109,10 +118,7 @@ func (w *RotateWriter) Write(p []byte) (n int, err error) {
 		return 0, os.ErrClosed
 	}
 
-	if w.pool.Load() == nil {
-		pool := w.newPool()
-		w.pool.Store(pool)
-	}
+	w.tryInitPool()
 
 	buff := w.pool.Load().Get().(*BufferType)
 	buff.IncRef()
@@ -129,10 +135,7 @@ func (w *RotateWriter) WriteString(s string) (n int, err error) {
 		return 0, os.ErrClosed
 	}
 
-	if w.pool.Load() == nil {
-		pool := w.newPool()
-		w.pool.Store(pool)
-	}
+	w.tryInitPool()
 
 	buff := w.pool.Load().Get().(*BufferType)
 	buff.IncRef()
@@ -148,15 +151,19 @@ func (w *RotateWriter) writeBuffer(buff *BufferType) (n int, err error) {
 		Buffer: buff,
 	}
 
-	w.queue.Push(event)
+	n = buff.Object().Len()
 
 	v := w.lastError.Load()
 	if v != nil {
 		err = v.(error)
-		return buff.Object().Len(), err
+		w.lastError.Store(nil)
 	}
 
-	return buff.Object().Len(), nil
+	// push后，buff的所有权交个另一个go routine
+	// 不要再使用buff
+	w.queue.Push(event)
+
+	return
 }
 
 func (w *RotateWriter) WriteBuffer(buff *BufferType) (n int, err error) {
@@ -213,11 +220,44 @@ func (w *RotateWriter) Sync() error {
 	return err
 }
 
+func (w *RotateWriter) cleanupQueue() {
+	// 确保所有event都被处理
+	for !w.queue.Empty() {
+		e := w.queue.Pop()
+
+		switch e.Type {
+		case internal.EVENT_TYPE_SYNC:
+			if e.Chan == nil {
+				continue
+			}
+			e.Chan <- nil
+
+		case internal.EVENT_TYPE_CLOSE:
+			e.Chan <- nil
+
+		case internal.EVENT_TYPE_BUFFER:
+			err := w.handleBuffer(e.Buffer)
+			if err != nil {
+				w.Logger().Error("write buffer failed when cleanup:", err.Error())
+			}
+		}
+	}
+}
+
 func (w *RotateWriter) close() error {
 	if w.closed.Load() {
 		return nil
 	}
-	w.closed.Store(true)
+	if !w.closed.CompareAndSwap(false, true) {
+		return nil
+	}
+
+	if w.writer == nil && w.queue.Empty() {
+		return nil
+	}
+
+	// 确保所有event都被处理
+	w.cleanupQueue()
 
 	if w.writer == nil {
 		return nil
@@ -260,6 +300,9 @@ func (w *RotateWriter) handleBuffer(buff *BufferType) error {
 
 	_, err = w.writer.Write(buff.Object().Bytes())
 
+	// 释放资源
+	buff.DecRef()
+
 	return err
 }
 
@@ -295,7 +338,7 @@ func (w *RotateWriter) handleSyncTicker() {
 	}
 }
 
-func (w *RotateWriter) handle() {
+func (w *RotateWriter) run() {
 	defer w.stopTicker()
 
 	for {
@@ -309,13 +352,11 @@ func (w *RotateWriter) handle() {
 
 			} else if err != nil {
 				w.lastError.Store(err)
-				w.Logger().Error("sync failed:", err.Error())
 			}
 
 		case internal.EVENT_TYPE_CLOSE:
 			err := w.close()
 			e.Chan <- err
-
 			// 退出
 			return
 
@@ -323,11 +364,7 @@ func (w *RotateWriter) handle() {
 			err := w.handleBuffer(e.Buffer)
 			if err != nil {
 				w.lastError.Store(err)
-				w.Logger().Error("write failed:", err.Error())
 			}
-
-			// 清理
-			e.Buffer.DecRef()
 		}
 	}
 }
@@ -404,14 +441,15 @@ func (w *RotateWriter) rotate() error {
 
 // 清理过时的文件
 func (w *RotateWriter) cleanup() {
-	// 文件清理过于耗时，清理间隔过短，可能会导致同时启动多个清理协程，
-	// 因而进行限制
+	// 文件清理过于耗时，清理间隔过短，可能会导致同时启动多个清理协程，因而进行限制
 	if w.cleaning.Load() {
 		return
 	}
-	w.cleaning.Store(true)
+	if !w.cleaning.CompareAndSwap(false, true) {
+		return
+	}
 
-	files, err := fileutil.ListFile(w.options.OutDir, w.globPattern)
+	fileList, err := fileutil.ListFile(w.options.OutDir, w.globPattern)
 	if err != nil {
 		w.cleaning.Store(false)
 		w.Logger().Error("list file failed:", err.Error())
@@ -424,7 +462,7 @@ func (w *RotateWriter) cleanup() {
 	go func() {
 		defer w.cleaning.Store(false)
 
-		for _, file := range files {
+		for _, file := range fileList {
 			// 跳过当前文件
 			if file == currentFile {
 				continue
@@ -451,15 +489,6 @@ func (w *RotateWriter) cleanup() {
 			}
 		}
 	}()
-}
-
-func (w *RotateWriter) GetLastError() error {
-	v := w.lastError.Load()
-	if v == nil {
-		return nil
-	}
-
-	return v.(error)
 }
 
 func (w *RotateWriter) Logger() logging.Logger {

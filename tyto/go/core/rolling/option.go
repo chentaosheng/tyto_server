@@ -31,7 +31,7 @@ func WithNamePattern(namePattern string) Option {
 	}
 }
 
-// linkName参数只在linux下有效，输入空字符串表示不创建符号链接
+// linkName参数在windows下无效，输入空字符串表示不创建符号链接
 func WithLinkName(linkName string) Option {
 	return func(o *internal.Options) {
 		o.LinkName = linkName

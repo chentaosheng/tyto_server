@@ -14,7 +14,7 @@ const (
 )
 
 type Event struct {
-	Type   EventType                         // 事件类型
-	Chan   chan error                        // 返回处理结果用的channel，可能为nil
-	Buffer *memutil.RefCounter[bytes.Buffer] // 需要写入的数据
+	Type   EventType                        // 事件类型
+	Chan   chan error                       // 返回处理结果用的channel，可能为nil
+	Buffer *memutil.RefObject[bytes.Buffer] // 需要写入的数据
 }
