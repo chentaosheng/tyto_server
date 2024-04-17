@@ -88,7 +88,7 @@ func NewRotateWriter(opts ...Option) (*RotateWriter, error) {
 	return writer, nil
 }
 
-func (w *RotateWriter) destroyData(buff *BufferType) {
+func (w *RotateWriter) destroyBuffer(buff *BufferType) {
 	w.pool.Load().Put(buff)
 }
 
@@ -97,7 +97,7 @@ func (w *RotateWriter) newPool() *sync.Pool {
 		New: func() interface{} {
 			buff := bytes.Buffer{}
 			buff.Grow(128)
-			return memutil.NewRefObject(buff, w.destroyData)
+			return memutil.NewRefObject(buff, w.destroyBuffer)
 		},
 	}
 }
