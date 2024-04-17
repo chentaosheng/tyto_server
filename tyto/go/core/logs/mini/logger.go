@@ -1,4 +1,4 @@
-package logging
+package mini
 
 import (
 	"fmt"
@@ -10,13 +10,13 @@ import (
 
 // 一个简单的日志器，只能输出到stderr
 // 通常用于在日志系统初始化之前使用
-type MiniLogger struct {
+type Logger struct {
 	mutex   sync.Mutex
 	builder strings.Builder
 }
 
-func NewMiniLogger() *MiniLogger {
-	logger := &MiniLogger{
+func NewLogger() *Logger {
+	logger := &Logger{
 		mutex:   sync.Mutex{},
 		builder: strings.Builder{},
 	}
@@ -26,34 +26,34 @@ func NewMiniLogger() *MiniLogger {
 	return logger
 }
 
-func (logger *MiniLogger) Trace(v ...interface{}) {
+func (logger *Logger) Trace(v ...interface{}) {
 	logger.log("TRACE", v...)
 }
 
-func (logger *MiniLogger) Debug(v ...interface{}) {
+func (logger *Logger) Debug(v ...interface{}) {
 	logger.log("DEBUG", v...)
 }
 
-func (logger *MiniLogger) Info(v ...interface{}) {
+func (logger *Logger) Info(v ...interface{}) {
 	logger.log("INFO", v...)
 }
 
-func (logger *MiniLogger) Warn(v ...interface{}) {
+func (logger *Logger) Warn(v ...interface{}) {
 	logger.log("WARN", v...)
 }
 
-func (logger *MiniLogger) Error(v ...interface{}) {
+func (logger *Logger) Error(v ...interface{}) {
 	logger.log("ERROR", v...)
 }
 
-func (logger *MiniLogger) Fatal(v ...interface{}) {
+func (logger *Logger) Fatal(v ...interface{}) {
 	logger.log("FATAL", v...)
 }
 
-func (logger *MiniLogger) Close() {
+func (logger *Logger) Close() {
 }
 
-func (logger *MiniLogger) log(level string, v ...interface{}) {
+func (logger *Logger) log(level string, v ...interface{}) {
 	logger.mutex.Lock()
 	defer logger.mutex.Unlock()
 
