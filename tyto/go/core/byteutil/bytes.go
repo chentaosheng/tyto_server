@@ -1,4 +1,4 @@
-package memutil
+package byteutil
 
 import "unsafe"
 
