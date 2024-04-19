@@ -26,6 +26,7 @@ func Start(logger logging.Logger, name string, code string) (*daemon.Context, bo
 		logger.Error("get exe absolute path failed:", err)
 		return nil, false
 	}
+	absPath = fmt.Sprintf("%s-%s", absPath, code)
 
 	// pid文件
 	pidDir := "./run"
