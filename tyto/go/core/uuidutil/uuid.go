@@ -6,6 +6,11 @@ import (
 	"tyto/core/tyto"
 )
 
+func init() {
+	// 提高生成uuid的速度
+	uuid.EnableRandPool()
+}
+
 // 新建uuid字符串，32字节，格式：018e414e50f27b3fbe6492fcb1c21a00
 func NewUuidString(ctx tyto.Context) (string, bool) {
 	id, err := uuid.NewV7()
