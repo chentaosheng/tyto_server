@@ -3,6 +3,7 @@ module tyto
 go 1.22
 
 require (
+	github.com/bits-and-blooms/bitset v1.13.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/daviddengcn/go-colortext v1.0.0
 	github.com/google/uuid v1.6.0
