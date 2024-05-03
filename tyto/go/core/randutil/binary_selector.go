@@ -45,16 +45,15 @@ func (s *BinarySelector[T]) Add(ctx tyto.Context, value T, weight int32) {
 
 // 构建选择列表
 func (s *BinarySelector[T]) BuildList() {
-	s.total = 0
 	Shuffle(s.elements)
+	s.record = newSelectRecord(int32(len(s.elements)))
+	s.total = 0
 
 	for i, elem := range s.elements {
 		s.total += int64(elem.weight)
 		elem.sum = s.total
 		elem.index = int32(i)
 	}
-
-	s.record = newSelectRecord(int32(len(s.elements)))
 }
 
 // 允许重复选择
