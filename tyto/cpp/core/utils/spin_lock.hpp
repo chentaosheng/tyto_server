@@ -20,8 +20,6 @@ namespace tyto
 		// 加锁
 		void Lock() noexcept
 		{
-			static_assert(flag_.is_always_lock_free);
-
 			// 自旋方式等待的次数
 			constexpr int kPAUSE_COUNT_BEFORE_SLEEP = 32;
 			constexpr int kSLEEP_COUNT_BEFORE_YIELD = 64;
@@ -35,7 +33,7 @@ namespace tyto
 			for (;;)
 			{
 				std::size_t retries = 0;
-				while (flag_.load(std::memory_order_relaxed))
+				while (flag_.test(std::memory_order_relaxed))
 				{
 					// 按顺序用不同的方式自旋等待
 					if (retries < kPAUSE_COUNT_BEFORE_SLEEP)
@@ -55,7 +53,7 @@ namespace tyto
 					}
 				}
 
-				if (!flag_.exchange(true, std::memory_order_acquire))
+				if (flag_.test_and_set(std::memory_order_acquire))
 				{
 					// 获取失败，说明线程间竞争比较激烈，进行随机退避
 					std::size_t shift = (std::min)(conflict_count, kMAX_BACKOFF_SHIFT);
@@ -85,16 +83,16 @@ namespace tyto
 		// 尝试加锁，非阻塞，加锁成功返回true，否则返回false
 		bool TryLock() noexcept
 		{
-			return !flag_.exchange(true, std::memory_order_acquire);
+			return !flag_.test_and_set(std::memory_order_acquire);
 		}
 
 		// 解锁
 		void Unlock() noexcept
 		{
-			flag_.store(false, std::memory_order_release);
+			flag_.clear(std::memory_order_release);
 		}
 
 	private:
-		std::atomic_bool flag_;
+		std::atomic_flag flag_;
 	};
 }
