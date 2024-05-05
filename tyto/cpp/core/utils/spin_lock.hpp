@@ -6,7 +6,7 @@
 #include <cmath>
 #include <random>
 #include <boost/noncopyable.hpp>
-#include "cpu_relax.h"
+#include "cpu_relax.hpp"
 
 namespace tyto
 {
