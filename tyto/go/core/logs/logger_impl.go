@@ -93,7 +93,7 @@ func (logger *LoggerImpl) GetLevel() int32 {
 // 设置日志过滤级别，只有大于等于该级别的日志才会被输出
 // 级别错误会导致panic
 func (logger *LoggerImpl) SetLevel(level int32) {
-	if level < int32(MIN_LEVEL) || level > int32(MAX_LEVEL) {
+	if level < int32(LEVEL_MIN) || level > int32(LEVEL_MAX) {
 		panic("invalid log level")
 	}
 
