@@ -14,7 +14,7 @@ namespace tyto
 		// 获取当前时间戳，单位为秒
 		static int64 NowSecond();
 
-	private:
+	public:
 		TimeUtil() = delete;
 	};
 }

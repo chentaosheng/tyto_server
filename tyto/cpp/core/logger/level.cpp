@@ -1,10 +1,11 @@
 #include "level.hpp"
 
-namespace tyto {
+namespace tyto
+{
 	std::ostream& operator<<(std::ostream& strm, LogLevel level)
 	{
 		static const char* names[] = {
-		  "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "UNKNOWN",
+			"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "UNKNOWN",
 		};
 
 		if (level < kMinLogLevel || level > kMaxLogLevel)

@@ -79,31 +79,31 @@ namespace tyto
 
 // 普通打印
 #define LOG(logger, level, ...) \
-	do { \
-		BOOST_LOG_SEV(logger.Source(), level) << __VA_ARGS__; \
-	} while (0)
+    do { \
+        BOOST_LOG_SEV(logger.Source(), level) << __VA_ARGS__; \
+    } while (0)
 
 // 打印附带函数名和行号
 #if BOOST_COMP_MSVC || BOOST_COMP_MSVC_EMULATED
-	#define LOG_FUNC(logger, level, ...) \
-		do { \
-			BOOST_LOG_SEV(logger.Source(), level) << __FUNCSIG__ << ":" << __LINE__ << " " << __VA_ARGS__; \
-		} while (0)
+#	define LOG_FUNC(logger, level, ...) \
+        do { \
+            BOOST_LOG_SEV(logger.Source(), level) << __FUNCSIG__ << ":" << __LINE__ << " " << __VA_ARGS__; \
+        } while (0)
 #elif BOOST_COMP_GNUC || BOOST_COMP_GNUC_EMULATED
-	#define LOG_FUNC(logger, level, ...) \
+#	define LOG_FUNC(logger, level, ...) \
 		do { \
 			BOOST_LOG_SEV(logger.Source(), level) << __PRETTY_FUNCTION__ << ":" << __LINE__ << " " << __VA_ARGS__; \
 		} while (0)
 #else
-	#error The compiler is not supported
+#	error The compiler is not supported
 #endif
 
 // 对外接口
 #ifdef NDEBUG
-	// release模式下不打印trace日志
-	#define LOG_TRACE(logger, ...) do {} while (0)
+//	release模式下不打印trace日志
+#	define LOG_TRACE(logger, ...) do {} while (0)
 #else
-	#define LOG_TRACE(logger, ...) LOG(logger, tyto::LOG_LEVEL_TRACE, __VA_ARGS__)
+#	define LOG_TRACE(logger, ...) LOG(logger, tyto::LOG_LEVEL_TRACE, __VA_ARGS__)
 #endif
 
 #define LOG_DEBUG(logger, ...) LOG(logger, tyto::LOG_LEVEL_DEBUG, __VA_ARGS__)
