@@ -51,15 +51,15 @@ namespace tyto
 		void SetMaxFileAge(std::chrono::seconds sec);
 
 	private:
-		void CleanupFile(boost::shared_ptr<FileBackend> backend, const std::string& log_file,
+		void CleanupFile(const boost::shared_ptr<Logger::FileBackend>& backend, const std::string& log_file,
 			boost::log::sinks::text_file_backend::stream_type& file);
 
 		boost::shared_ptr<FileSink> CreateFileSink(const std::string& channel_name,
 			const std::string& log_file, LogLevel level, bool auto_flush);
-		void RemoveFileSink(boost::shared_ptr<FileSink> sink);
+		void RemoveFileSink(boost::shared_ptr<FileSink>& sink);
 
 		boost::shared_ptr<StreamSink> CreateStreamSink(std::ostream& strm, LogLevel level);
-		void RemoveStreamSink(boost::shared_ptr<StreamSink> sink);
+		void RemoveStreamSink(boost::shared_ptr<StreamSink>& sink);
 
 	private:
 		bool inited_{ false };

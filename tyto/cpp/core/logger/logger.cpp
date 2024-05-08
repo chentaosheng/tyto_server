@@ -179,7 +179,7 @@ namespace tyto
 		max_file_age_ = sec;
 	}
 
-	void Logger::CleanupFile(boost::shared_ptr<Logger::FileBackend> backend,
+	void Logger::CleanupFile(const boost::shared_ptr<Logger::FileBackend>& backend,
 		const std::string& log_file, sinks::text_file_backend::stream_type& file)
 	{
 		std::scoped_lock lock(mutex_);
@@ -260,7 +260,7 @@ namespace tyto
 		return sink;
 	}
 
-	void Logger::RemoveFileSink(boost::shared_ptr<FileSink> sink)
+	void Logger::RemoveFileSink(boost::shared_ptr<FileSink>& sink)
 	{
 		logging::core::get()->remove_sink(sink);
 		sink->stop();
@@ -283,7 +283,7 @@ namespace tyto
 		return sink;
 	}
 
-	void Logger::RemoveStreamSink(boost::shared_ptr<StreamSink> sink)
+	void Logger::RemoveStreamSink(boost::shared_ptr<StreamSink>& sink)
 	{
 		logging::core::get()->remove_sink(sink);
 		sink->flush();
