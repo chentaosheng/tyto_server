@@ -5,20 +5,20 @@
 namespace tyto
 {
 	// 日志级别
-	enum class LogLevel
+	enum LogLevel
 	{
-		TRACE = 0,
-		DEBUG = 1,
-		INFO = 2,
-		WARN = 3,
-		ERROR = 4,
-		FATAL = 5,
+		LOG_LEVEL_TRACE = 0,
+		LOG_LEVEL_DEBUG = 1,
+		LOG_LEVEL_INFO = 2,
+		LOG_LEVEL_WARN = 3,
+		LOG_LEVEL_ERROR = 4,
+		LOG_LEVEL_FATAL = 5,
 	};
 
 	// 日志级别范围
-	constexpr LogLevel kMinLogLevel = LogLevel::TRACE;
-	constexpr LogLevel kMaxLogLevel = LogLevel::FATAL;
-	constexpr int kInvalidLogLevel = static_cast<int>(kMaxLogLevel) + 1;
+	constexpr LogLevel kMinLogLevel = LOG_LEVEL_TRACE;
+	constexpr LogLevel kMaxLogLevel = LOG_LEVEL_FATAL;
+	constexpr int kInvalidLogLevel = kMaxLogLevel + 1;
 
 	// 格式化输出
 	std::ostream& operator<<(std::ostream& strm, LogLevel level);

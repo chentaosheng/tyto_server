@@ -89,7 +89,7 @@ namespace tyto
 		normal_sink_ = sink;
 
 		// error
-		sink = CreateFileSink(channel_name, "err_" + log_file, LogLevel::WARN, true);
+		sink = CreateFileSink(channel_name, "err_" + log_file, LOG_LEVEL_WARN, true);
 		logging::core::get()->add_sink(sink);
 		error_sink_ = sink;
 
@@ -152,13 +152,13 @@ namespace tyto
 		// error
 		if (error_sink_ != nullptr)
 		{
-			if (level > LogLevel::WARN)
+			if (level > LOG_LEVEL_WARN)
 			{
 				error_sink_->set_filter(expr::attr<LogLevel>("Severity") >= level && expr::attr<std::string>("Channel") == channel_name_);
 			}
 			else
 			{
-				error_sink_->set_filter(expr::attr<LogLevel>("Severity") >= LogLevel::WARN && expr::attr<std::string>("Channel") == channel_name_);
+				error_sink_->set_filter(expr::attr<LogLevel>("Severity") >= LOG_LEVEL_WARN && expr::attr<std::string>("Channel") == channel_name_);
 			}
 		}
 
