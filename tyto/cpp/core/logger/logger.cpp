@@ -1,3 +1,4 @@
+#include <cassert>
 #include <functional>
 #include <filesystem>
 #include <regex>
@@ -19,6 +20,46 @@ namespace attrs = boost::log::attributes;
 
 namespace tyto
 {
+	static void FormatTime(char* buf, std::size_t size, const boost::posix_time::ptime* ptime_ptr)
+	{
+		auto date = ptime_ptr->date();
+		auto time = ptime_ptr->time_of_day();
+
+		std::int32_t year = date.year();
+		std::int32_t month = date.month();
+		std::int32_t day = date.day();
+		std::int32_t hours = time.hours();
+		std::int32_t minutes = time.minutes();
+		std::int32_t seconds = time.seconds();
+		std::int32_t milli = time.fractional_seconds() / 1000;
+
+		assert(size >= 24); // YYYY-MM-DD HH:MM:SS.mmm
+
+		std::snprintf(buf, size, "%04d-%02d-%02d %02d:%02d:%02d.%03d", year, month, day, hours, minutes, seconds, milli);
+	}
+
+	static void RecordFormatter(logging::record_view const& rec, logging::formatting_ostream& strm)
+	{
+		// 等价于：
+		// expr::stream
+		//	<< expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S")
+		//	<< " [" << expr::attr<LogLevel>("Severity") << "] "
+		//	<< expr::smessage;
+
+		char buf[32];
+		auto time_ref = logging::extract<boost::posix_time::ptime>("TimeStamp", rec);
+		FormatTime(buf, sizeof(buf), time_ref.get_ptr());
+
+		// 写入时间
+		strm << buf;
+
+		// 写入日志级别
+		strm << " [" << logging::extract<LogLevel>("Severity", rec) << "] ";
+
+		// 日志内容
+		strm << rec[expr::smessage];
+	}
+
 	bool Logger::Init(const std::string& channel_name, const std::string& out_dir, const std::string& log_file, LogLevel level)
 	{
 		std::scoped_lock lock(mutex_);
@@ -206,20 +247,13 @@ namespace tyto
 		);
 
 		if (auto_flush)
-		{
 			backend->auto_flush(true);
-		}
 
 		// 每次打开新文件后，清理过期文件
 		backend->set_open_handler(std::bind(&Logger::CleanupFile, this, backend, log_file, std::placeholders::_1));
 
 		auto sink = boost::make_shared<FileSink>(backend);
-		sink->set_formatter(
-			expr::stream
-			<< expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S")
-			<< " [" << expr::attr<LogLevel>("Severity") << "] "
-			<< expr::smessage
-		);
+		sink->set_formatter(&RecordFormatter);
 
 		sink->set_filter(expr::attr<LogLevel>("Severity") >= level && expr::attr<std::string>("Channel") == channel_name);
 
@@ -244,12 +278,7 @@ namespace tyto
 
 		sink->set_filter(expr::attr<LogLevel>("Severity") >= level && expr::attr<std::string>("Channel") == channel_name_);
 
-		sink->set_formatter(
-			expr::stream
-			<< expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S")
-			<< " [" << expr::attr<LogLevel>("Severity") << "] "
-			<< expr::smessage
-		);
+		sink->set_formatter(&RecordFormatter);
 
 		return sink;
 	}
