@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <memory>
 #include <mutex>
+#include <chrono>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/log/sinks.hpp>
@@ -22,8 +24,8 @@ namespace tyto
 		using StreamBackend = boost::log::sinks::text_ostream_backend;
 		using StreamSink = boost::log::sinks::synchronous_sink<StreamBackend>;
 
-		// 最大保留文件数量
-		static constexpr int kMaxFileCount = 30;
+		// 默认最大保留时间，单位：秒
+		static constexpr std::int64_t kDefaultMaxFileAge = 30 * 24 * 3600;
 
 	public:
 		Logger() = default;
@@ -42,10 +44,16 @@ namespace tyto
 			return channel_name_;
 		}
 
+		// 设置日志级别
 		void SetLevel(LogLevel level);
+		// 设置文件最大保留时间，单位：秒
+		void SetMaxFileAge(std::chrono::seconds sec);
 
 	private:
-		boost::shared_ptr<FileSink> CreateFileSink(const std::string& channel_name, const std::string& out_dir,
+		void CleanupFile(boost::shared_ptr<FileBackend> backend, const std::string& log_file,
+			boost::log::sinks::text_file_backend::stream_type& file);
+
+		boost::shared_ptr<FileSink> CreateFileSink(const std::string& channel_name,
 			const std::string& log_file, LogLevel level, bool auto_flush);
 		void RemoveFileSink(boost::shared_ptr<FileSink> sink);
 
@@ -53,13 +61,18 @@ namespace tyto
 		void RemoveStreamSink(boost::shared_ptr<StreamSink> sink);
 
 	private:
+		bool inited_{ false };
+
 		std::mutex mutex_;
 		std::string channel_name_;
+		std::string log_file_;
+		std::string out_dir_;
+		std::chrono::seconds max_file_age_{ kDefaultMaxFileAge };
+
 		std::unique_ptr<LogSource> impl_;
 		boost::shared_ptr<FileSink> normal_sink_;
 		boost::shared_ptr<FileSink> error_sink_;
 		boost::shared_ptr<StreamSink> console_sink_;
-		bool inited_{ false };
 	};
 }
 

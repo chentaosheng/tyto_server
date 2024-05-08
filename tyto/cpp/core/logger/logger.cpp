@@ -1,3 +1,6 @@
+#include <functional>
+#include <filesystem>
+#include <regex>
 #include <boost/predef/os.h>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/log/core.hpp>
@@ -5,7 +8,7 @@
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
-#include <boost/filesystem/path.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include "logger.hpp"
 
 namespace logging = boost::log;
@@ -23,6 +26,16 @@ namespace tyto
 		if (inited_)
 			return false;
 
+		// 文件名不能包含路径
+		if (log_file.find('\\') != std::string::npos || log_file.find('/') != std::string::npos)
+			return false;
+
+		log_file_ = log_file;
+
+		std::filesystem::path dir = std::filesystem::absolute(out_dir);
+		dir.make_preferred();
+		out_dir_ = dir.string();
+
 		channel_name_ = channel_name;
 
 		// source
@@ -30,12 +43,12 @@ namespace tyto
 		impl_->add_attribute("TimeStamp", attrs::local_clock());
 
 		// normal
-		auto sink = CreateFileSink(channel_name, out_dir, log_file, level, false);
+		auto sink = CreateFileSink(channel_name, log_file, level, false);
 		logging::core::get()->add_sink(sink);
 		normal_sink_ = sink;
 
 		// error
-		sink = CreateFileSink(channel_name, out_dir, "err_" + log_file, LogLevel::WARN, true);
+		sink = CreateFileSink(channel_name, "err_" + log_file, LogLevel::WARN, true);
 		logging::core::get()->add_sink(sink);
 		error_sink_ = sink;
 
@@ -115,18 +128,80 @@ namespace tyto
 		}
 	}
 
-	boost::shared_ptr<tyto::Logger::FileSink> Logger::CreateFileSink(const std::string& channel_name,
-		const std::string& out_dir, const std::string& log_file, LogLevel level, bool auto_flush)
+	void Logger::SetMaxFileAge(std::chrono::seconds sec)
 	{
-		boost::filesystem::path out_path(out_dir);
-		auto str_path = out_path.append(log_file).make_preferred().string();
+		if (sec <= std::chrono::seconds(0))
+			return;
+
+		std::scoped_lock lock(mutex_);
+
+		max_file_age_ = sec;
+	}
+
+	void Logger::CleanupFile(boost::shared_ptr<Logger::FileBackend> backend,
+		const std::string& log_file, sinks::text_file_backend::stream_type& file)
+	{
+		std::scoped_lock lock(mutex_);
+
+		std::filesystem::path out_path = out_dir_;
+		std::string pattern = out_path.append(log_file).make_preferred().string();
+
+		// 对路径中的特殊字符进行转义
+		boost::algorithm::replace_all(pattern, "\\", "\\\\");
+		boost::algorithm::replace_all(pattern, ".", "\\.");
+
+		// 生成用于文件匹配的正则表达式
+		pattern = "^" + pattern + "\\..*";
+		std::regex pattern_regex(pattern);
+		std::filesystem::path path_to_search(out_dir_);
+
+		// 过期时间点
+		auto expire_time = std::chrono::system_clock::now();
+		expire_time -= max_file_age_;
+
+		// 当前正在写入的文件
+		auto cur_file = backend->get_current_file_name().string();
+
+		// 搜索目录下的所有文件
+		for (const auto& entry : std::filesystem::recursive_directory_iterator(path_to_search))
+		{
+			if (!std::regex_match(entry.path().string(), pattern_regex))
+				continue;
+
+			if (!std::filesystem::is_regular_file(entry.status()))
+				continue;
+
+			// 跳过当前文件
+			if (cur_file == entry.path())
+				continue;
+
+			// 判断时间
+			std::error_code err;
+			auto file_time = entry.last_write_time(err);
+			if (err)
+				continue;
+
+			auto mod_time = std::chrono::clock_cast<std::chrono::system_clock>(file_time);
+			if (mod_time > expire_time)
+				continue;
+
+			// 删除过时文件
+			std::filesystem::remove(entry.path());
+		}
+	}
+
+	boost::shared_ptr<tyto::Logger::FileSink> Logger::CreateFileSink(const std::string& channel_name,
+		const std::string& log_file, LogLevel level, bool auto_flush)
+	{
+		std::filesystem::path out_path(out_dir_);
+		auto pattern = out_path.append(log_file).string();
+		pattern.append(".%Y-%m-%d");
 
 		auto backend = boost::make_shared<FileBackend>(
-			keywords::file_name = str_path,
-			keywords::target_file_name = str_path + ".%Y-%m-%d",
+			keywords::file_name = pattern,
+			keywords::target_file_name = pattern,
 			keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0),
 			keywords::enable_final_rotation = false,
-			keywords::max_files = kMaxFileCount,
 			keywords::open_mode = std::ios::app | std::ios::out
 		);
 
@@ -134,6 +209,9 @@ namespace tyto
 		{
 			backend->auto_flush(true);
 		}
+
+		// 每次打开新文件后，清理过期文件
+		backend->set_open_handler(std::bind(&Logger::CleanupFile, this, backend, log_file, std::placeholders::_1));
 
 		auto sink = boost::make_shared<FileSink>(backend);
 		sink->set_formatter(
