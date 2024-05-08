@@ -28,10 +28,10 @@ namespace tyto
 		std::int32_t year = date.year();
 		std::int32_t month = date.month();
 		std::int32_t day = date.day();
-		std::int32_t hours = time.hours();
-		std::int32_t minutes = time.minutes();
-		std::int32_t seconds = time.seconds();
-		std::int32_t milli = time.fractional_seconds() / 1000;
+		std::int32_t hours = static_cast<std::int32_t>(time.hours());
+		std::int32_t minutes = static_cast<std::int32_t>(time.minutes());
+		std::int32_t seconds = static_cast<std::int32_t>(time.seconds());
+		std::int32_t milli = static_cast<std::int32_t>(time.fractional_seconds() / 1000);
 
 		assert(size >= 24); // YYYY-MM-DD HH:MM:SS.mmm
 
