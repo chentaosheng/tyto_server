@@ -28,6 +28,6 @@ namespace tyto
 		}
 
 	private:
-		std::atomic_flag flag_;
+		std::atomic_flag flag_ = ATOMIC_FLAG_INIT;
 	};
 }
