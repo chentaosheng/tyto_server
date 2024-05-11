@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <regex>
 #include <boost/predef/os.h>
+#include <boost/predef/compiler.h>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
@@ -11,6 +12,10 @@
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include "logger.hpp"
+
+#if BOOST_COMP_GNUC && (BOOST_COMP_GNUC < BOOST_VERSION_NUMBER(13, 0, 0))
+#include <boost/filesystem/operations.hpp>
+#endif
 
 namespace logging = boost::log;
 namespace expr = boost::log::expressions;
@@ -71,20 +76,25 @@ namespace tyto
 		if (log_file.find('\\') != std::string::npos || log_file.find('/') != std::string::npos)
 			return false;
 
-		log_file_ = log_file;
-
 		std::filesystem::path dir = std::filesystem::absolute(out_dir);
-		dir.make_preferred();
-		out_dir_ = dir.string();
+		out_dir_ = dir.make_preferred().string();
 
+		log_file_ = log_file;
 		channel_name_ = channel_name;
+		max_file_age_.store(std::chrono::seconds(kDefaultMaxFileAge), std::memory_order_relaxed);
+
+		// 创建目录
+		std::error_code err;
+		std::filesystem::create_directories(dir, err);
+		if (err)
+			return false;
 
 		// source
 		impl_ = std::make_unique<LogSource>(keywords::channel = channel_name);
 		impl_->add_attribute("TimeStamp", attrs::local_clock());
 
 		// normal
-		auto sink = CreateFileSink(channel_name, log_file, level, false);
+		auto sink = CreateFileSink(channel_name, log_file, level, true);
 		logging::core::get()->add_sink(sink);
 		normal_sink_ = sink;
 
@@ -174,16 +184,12 @@ namespace tyto
 		if (sec <= std::chrono::seconds(0))
 			return;
 
-		std::scoped_lock lock(mutex_);
-
-		max_file_age_ = sec;
+		max_file_age_.store(sec, std::memory_order_relaxed);
 	}
 
-	void Logger::CleanupFile(const boost::shared_ptr<Logger::FileBackend>& backend,
+	void Logger::CleanupFile(const boost::shared_ptr<FileSink>& sink,
 		const std::string& log_file, sinks::text_file_backend::stream_type& file)
 	{
-		std::scoped_lock lock(mutex_);
-
 		std::filesystem::path out_path = out_dir_;
 		std::string pattern = out_path.append(log_file).make_preferred().string();
 
@@ -198,10 +204,10 @@ namespace tyto
 
 		// 过期时间点
 		auto expire_time = std::chrono::system_clock::now();
-		expire_time -= max_file_age_;
+		expire_time -= max_file_age_.load();
 
 		// 当前正在写入的文件
-		auto cur_file = backend->get_current_file_name().string();
+		auto cur_file = sink->locked_backend()->get_current_file_name().string();
 
 		// 搜索目录下的所有文件
 		for (const auto& entry : std::filesystem::recursive_directory_iterator(path_to_search))
@@ -216,18 +222,28 @@ namespace tyto
 			if (cur_file == entry.path())
 				continue;
 
+#if BOOST_COMP_GNUC && (BOOST_COMP_GNUC < BOOST_VERSION_NUMBER(13, 0, 0))
+			// GCC 12.x 及以下版本不支持 std::chrono::clock_cast
+			boost::system::error_code err;
+			std::time_t write_time = boost::filesystem::last_write_time(entry.path().string(), err);
+			auto file_time = std::chrono::system_clock::from_time_t(write_time);
+			if (file_time > expire_time)
+				continue;
+#else
 			// 判断时间
 			std::error_code err;
-			auto file_time = entry.last_write_time(err);
+			auto write_time = entry.last_write_time(err);
 			if (err)
 				continue;
 
-			auto mod_time = std::chrono::clock_cast<std::chrono::system_clock>(file_time);
-			if (mod_time > expire_time)
+			auto file_time = std::chrono::clock_cast<std::chrono::system_clock>(write_time);
+			if (file_time > expire_time)
 				continue;
+#endif
 
 			// 删除过时文件
-			std::filesystem::remove(entry.path());
+			std::error_code serr;
+			std::filesystem::remove(entry.path(), serr);
 		}
 	}
 
@@ -249,13 +265,12 @@ namespace tyto
 		if (auto_flush)
 			backend->auto_flush(true);
 
-		// 每次打开新文件后，清理过期文件
-		backend->set_open_handler(std::bind(&Logger::CleanupFile, this, backend, log_file, std::placeholders::_1));
-
 		auto sink = boost::make_shared<FileSink>(backend);
 		sink->set_formatter(&RecordFormatter);
-
 		sink->set_filter(expr::attr<LogLevel>("Severity") >= level && expr::attr<std::string>("Channel") == channel_name);
+
+		// 每次打开新文件后，清理过期文件
+		sink->locked_backend()->set_open_handler(std::bind(&Logger::CleanupFile, this, sink, log_file, std::placeholders::_1));
 
 		return sink;
 	}
