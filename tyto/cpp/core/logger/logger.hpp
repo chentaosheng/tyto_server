@@ -5,6 +5,7 @@
 #include <memory>
 #include <mutex>
 #include <chrono>
+#include <format>
 #include <boost/predef/compiler.h>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
@@ -32,8 +33,15 @@ namespace tyto
 		Logger() = default;
 		~Logger() = default;
 
+		// 初始化
 		bool Init(const std::string& channel_name, const std::string& out_dir, const std::string& log_file, LogLevel level);
+		// 关闭logger
 		void Close();
+
+		// 设置日志级别
+		void SetLevel(LogLevel level);
+		// 设置文件最大保留时间，单位：秒
+		void SetMaxFileAge(std::chrono::seconds sec);
 
 		inline LogSource& Source() noexcept
 		{
@@ -45,10 +53,18 @@ namespace tyto
 			return channel_name_;
 		}
 
-		// 设置日志级别
-		void SetLevel(LogLevel level);
-		// 设置文件最大保留时间，单位：秒
-		void SetMaxFileAge(std::chrono::seconds sec);
+		// 打印日志
+		void Log(LogLevel level, const std::string& message)
+		{
+			BOOST_LOG_SEV(*impl_.get(), level) << message;
+		}
+
+		// C++方式格式化打印日志
+		template<typename... Args>
+		void Logf(LogLevel level, const std::format_string<Args...> fmt, Args&&... args)
+		{
+			BOOST_LOG_SEV(*impl_.get(), level) << std::vformat(fmt, std::make_format_args(args...));
+		}
 
 	private:
 		void CleanupFile(const boost::shared_ptr<FileSink>& sink, const std::string& log_file,
@@ -78,36 +94,21 @@ namespace tyto
 }
 
 // 普通打印
-#define LOG(logger, level, ...) \
-    do { \
-        BOOST_LOG_SEV(logger.Source(), level) << __VA_ARGS__; \
-    } while (0)
+#define LOG(logger, level) BOOST_LOG_SEV(logger.Source(), level)
 
 // 打印附带函数名和行号
 #if BOOST_COMP_MSVC || BOOST_COMP_MSVC_EMULATED
-#	define LOG_FUNC(logger, level, ...) \
-        do { \
-            BOOST_LOG_SEV(logger.Source(), level) << __FUNCSIG__ << ":" << __LINE__ << " " << __VA_ARGS__; \
-        } while (0)
+#	define LOG_FUNC(logger, level) BOOST_LOG_SEV(logger.Source(), level) << "[" << __FUNCSIG__ << ":" << __LINE__ << "] "
 #elif BOOST_COMP_GNUC || BOOST_COMP_GNUC_EMULATED
-#	define LOG_FUNC(logger, level, ...) \
-		do { \
-			BOOST_LOG_SEV(logger.Source(), level) << __PRETTY_FUNCTION__ << ":" << __LINE__ << " " << __VA_ARGS__; \
-		} while (0)
+#	define LOG_FUNC(logger, level) BOOST_LOG_SEV(logger.Source(), level) << "[" << __PRETTY_FUNCTION__ << ":" << __LINE__ << "] "
 #else
 #	error The compiler is not supported
 #endif
 
 // 对外接口
-#ifdef NDEBUG
-//	release模式下不打印trace日志
-#	define LOG_TRACE(logger, ...) do {} while (0)
-#else
-#	define LOG_TRACE(logger, ...) LOG(logger, tyto::LOG_LEVEL_TRACE, __VA_ARGS__)
-#endif
-
-#define LOG_DEBUG(logger, ...) LOG(logger, tyto::LOG_LEVEL_DEBUG, __VA_ARGS__)
-#define LOG_INFO(logger, ...) LOG(logger, tyto::LOG_LEVEL_INFO, __VA_ARGS__)
-#define LOG_WARN(logger, ...) LOG_FUNC(logger, tyto::LOG_LEVEL_WARN, __VA_ARGS__)
-#define LOG_ERROR(logger, ...) LOG_FUNC(logger, tyto::LOG_LEVEL_ERROR, __VA_ARGS__)
-#define LOG_FATAL(logger, ...) LOG_FUNC(logger, tyto::LOG_LEVEL_FATAL, __VA_ARGS__)
+#define LOG_TRACE(logger) LOG(logger, tyto::LOG_LEVEL_TRACE)
+#define LOG_DEBUG(logger) LOG(logger, tyto::LOG_LEVEL_DEBUG)
+#define LOG_INFO(logger) LOG(logger, tyto::LOG_LEVEL_INFO)
+#define LOG_WARN(logger) LOG_FUNC(logger, tyto::LOG_LEVEL_WARN)
+#define LOG_ERROR(logger) LOG_FUNC(logger, tyto::LOG_LEVEL_ERROR)
+#define LOG_FATAL(logger) LOG_FUNC(logger, tyto::LOG_LEVEL_FATAL)

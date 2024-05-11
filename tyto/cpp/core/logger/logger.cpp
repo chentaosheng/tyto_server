@@ -1,4 +1,6 @@
 #include <cassert>
+#include <cstdio>
+#include <cstdarg>
 #include <functional>
 #include <filesystem>
 #include <regex>
@@ -12,10 +14,6 @@
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include "logger.hpp"
-
-#if BOOST_COMP_GNUC && (BOOST_COMP_GNUC < BOOST_VERSION_NUMBER(13, 0, 0))
-#include <boost/filesystem/operations.hpp>
-#endif
 
 namespace logging = boost::log;
 namespace expr = boost::log::expressions;
@@ -222,14 +220,6 @@ namespace tyto
 			if (cur_file == entry.path())
 				continue;
 
-#if BOOST_COMP_GNUC && (BOOST_COMP_GNUC < BOOST_VERSION_NUMBER(13, 0, 0))
-			// GCC 12.x 及以下版本不支持 std::chrono::clock_cast
-			boost::system::error_code err;
-			std::time_t write_time = boost::filesystem::last_write_time(entry.path().string(), err);
-			auto file_time = std::chrono::system_clock::from_time_t(write_time);
-			if (file_time > expire_time)
-				continue;
-#else
 			// 判断时间
 			std::error_code err;
 			auto write_time = entry.last_write_time(err);
@@ -239,7 +229,6 @@ namespace tyto
 			auto file_time = std::chrono::clock_cast<std::chrono::system_clock>(write_time);
 			if (file_time > expire_time)
 				continue;
-#endif
 
 			// 删除过时文件
 			std::error_code serr;
