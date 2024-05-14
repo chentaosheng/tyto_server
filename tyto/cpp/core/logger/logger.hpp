@@ -61,7 +61,7 @@ namespace tyto
 
 		// C++方式格式化打印日志
 		template<typename... Args>
-		void Logf(LogLevel level, const std::format_string<Args...> fmt, Args&&... args)
+		void Logf(LogLevel level, const std::format_string<Args...> fmt, Args&& ... args)
 		{
 			BOOST_LOG_SEV(*impl_.get(), level) << std::vformat(fmt, std::make_format_args(args...));
 		}
@@ -94,21 +94,21 @@ namespace tyto
 }
 
 // 普通打印
-#define LOG(logger, level) BOOST_LOG_SEV(logger.Source(), level)
+#define __LOG_IMPL__(logger, level) BOOST_LOG_SEV(logger.Source(), level)
 
 // 打印附带函数名和行号
 #if BOOST_COMP_MSVC || BOOST_COMP_MSVC_EMULATED
-#	define LOG_FUNC(logger, level) BOOST_LOG_SEV(logger.Source(), level) << "[" << __FUNCSIG__ << ":" << __LINE__ << "] "
+#	define __LOG_IMPL_WITH_FUNC__(logger, level) BOOST_LOG_SEV(logger.Source(), level) << "[" << __FUNCSIG__ << ":" << __LINE__ << "] "
 #elif BOOST_COMP_GNUC || BOOST_COMP_GNUC_EMULATED
-#	define LOG_FUNC(logger, level) BOOST_LOG_SEV(logger.Source(), level) << "[" << __PRETTY_FUNCTION__ << ":" << __LINE__ << "] "
+#	define __LOG_IMPL_WITH_FUNC__(logger, level) BOOST_LOG_SEV(logger.Source(), level) << "[" << __PRETTY_FUNCTION__ << ":" << __LINE__ << "] "
 #else
 #	error The compiler is not supported
 #endif
 
 // 对外接口
-#define LOG_TRACE(logger) LOG(logger, tyto::LOG_LEVEL_TRACE)
-#define LOG_DEBUG(logger) LOG(logger, tyto::LOG_LEVEL_DEBUG)
-#define LOG_INFO(logger) LOG(logger, tyto::LOG_LEVEL_INFO)
-#define LOG_WARN(logger) LOG_FUNC(logger, tyto::LOG_LEVEL_WARN)
-#define LOG_ERROR(logger) LOG_FUNC(logger, tyto::LOG_LEVEL_ERROR)
-#define LOG_FATAL(logger) LOG_FUNC(logger, tyto::LOG_LEVEL_FATAL)
+#define LOG_TRACE(logger) __LOG_IMPL__(logger, tyto::LOG_LEVEL_TRACE)
+#define LOG_DEBUG(logger) __LOG_IMPL__(logger, tyto::LOG_LEVEL_DEBUG)
+#define LOG_INFO(logger) __LOG_IMPL__(logger, tyto::LOG_LEVEL_INFO)
+#define LOG_WARN(logger) __LOG_IMPL_WITH_FUNC__(logger, tyto::LOG_LEVEL_WARN)
+#define LOG_ERROR(logger) __LOG_IMPL_WITH_FUNC__(logger, tyto::LOG_LEVEL_ERROR)
+#define LOG_FATAL(logger) __LOG_IMPL_WITH_FUNC__(logger, tyto::LOG_LEVEL_FATAL)
