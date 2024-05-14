@@ -72,8 +72,9 @@ func (p *Pool) Get() int32 {
 
 // 释放一个ID
 func (p *Pool) Put(id int32) {
-	if id <= 0 {
+	if id <= INVALID_ID || id >= p.maxId {
 		return
 	}
+
 	p.freeList.Push(id)
 }
