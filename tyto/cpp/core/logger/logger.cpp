@@ -79,7 +79,6 @@ namespace tyto
 
 		log_file_ = log_file;
 		channel_name_ = channel_name;
-		max_file_age_.store(std::chrono::seconds(kDefaultMaxFileAge), std::memory_order_relaxed);
 
 		// 创建目录
 		std::error_code err;
@@ -202,7 +201,7 @@ namespace tyto
 
 		// 过期时间点
 		auto expire_time = std::chrono::system_clock::now();
-		expire_time -= max_file_age_.load();
+		expire_time -= max_file_age_.load(std::memory_order_relaxed);
 
 		// 当前正在写入的文件
 		auto cur_file = sink->locked_backend()->get_current_file_name().string();

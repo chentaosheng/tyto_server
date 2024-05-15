@@ -84,7 +84,7 @@ namespace tyto
 		std::string channel_name_;
 		std::string log_file_;
 		std::string out_dir_;
-		std::atomic<std::chrono::seconds> max_file_age_;
+		std::atomic<std::chrono::seconds> max_file_age_{ std::chrono::seconds(kDefaultMaxFileAge) };
 
 		std::unique_ptr<LogSource> impl_;
 		boost::shared_ptr<FileSink> normal_sink_;
