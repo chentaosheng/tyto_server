@@ -1,0 +1,3 @@
+[submodule "tyto/cpp/third_party"]
+	path = tyto/cpp/third_party
+	url = https://github.com/chentaosheng/tyto_third_party.git
